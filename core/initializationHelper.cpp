@@ -2,12 +2,12 @@
 // Created by amrit on 11/07/26.
 //
 
-#include "chip8.h"
+#include "initializationHelper.h"
 
 //  check if path points to regular file and it is less than 3.5 KiB
 bool isPathValid(const fs::path& romPath) {
     if (!fs::exists(romPath)) {
-        std::cerr<< "file dont not exist\n";
+        std::cerr<< "file does not exist\n";
         return false;
     }
     else if (!fs::is_regular_file(romPath)) {

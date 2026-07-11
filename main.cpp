@@ -1,4 +1,4 @@
-#include "core/chip8.h"
+#include "core/initializationHelper.h"
 
 int main(int argc, char* argv[]) {
 
@@ -12,6 +12,7 @@ int main(int argc, char* argv[]) {
     if (!isPathValid(romPath)) {
         return 1;
     }
+
 
     return 0;
 }
