@@ -150,6 +150,7 @@ void step(Chip8& cpu, Quirks quirks) {
                 for (int i=0 ; i<8 ; i++) {
 
                     if (!quirks.clipping || ((j+vy<32) & (i+vx<64))) {
+                        
                         bool spritePixel {static_cast<bool>(((cpu.memory[static_cast<uint>(cpu.indexRegister+j)])>>(7-i))&1)};
                         bool& displayPixel {cpu.display[(uint)(vy+j)%32][(uint)(vx+i)%64]};
 
