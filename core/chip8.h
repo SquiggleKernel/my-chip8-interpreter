@@ -6,7 +6,11 @@
 #define MY_CHIP8_INTERPRETER_CHIP8_H
 
 #include <array>
+#include <iostream>
 #include <cstdint>
+#include <filesystem>
+#include <fstream>
+#include <cstring>
 
 struct Chip8 {
     // 4Kib of RAM, 16 8 bit registers and 16 bit Index register
@@ -27,7 +31,24 @@ struct Chip8 {
 
     // display
     std::array<std::array<bool, 64>, 32> display{};
+    bool dirtyDisplay{true};
 
+    // PRNG
+    uint16_t prngState{};
+
+    // Call this once when the emulator starts
+    void prngSeed(uint16_t val) {
+        // State cannot be 0, or the math will always return 0
+        prngState = (val == 0) ? 0xACE1 : val;
+    }
+
+    // Generates the next number
+    uint8_t get_byte() {
+        prngState ^= prngState << 7;
+        prngState ^= prngState >> 9;
+        prngState ^= prngState << 8;
+        return static_cast<std::uint8_t>(prngState & 0xFF);
+    }
 
     uint16_t getOpcode() {
         return static_cast<uint16_t>( memory[pc]<<8 | memory [pc+1]);
@@ -38,12 +59,12 @@ struct Chip8 {
 struct Instructions {
     std::uint16_t opcode{};
     // Common Chip-8 components decoded from the opcode
-    uint8_t type() const { return (opcode & 0xF000) >> 12;    } // First nibble
-    uint8_t x()    const { return (opcode & 0x0F00) >> 8;     } // Second nibble or lower 4 bit of 1st byte
-    uint8_t y()    const { return (opcode & 0x00F0) >> 4;     } // Third nibble or upper 4 bit of 2nd byte
-    uint8_t n()    const { return (opcode & 0x000F);          } // Fourth nibble
-    uint8_t kk()   const { return (opcode & 0x00FF);          } // last byte of the instruction
-    uint16_t nnn() const { return (opcode & 0x0FFF);          } // Last 12 bits
+    uint8_t type() const { return static_cast<uint8_t>((opcode & 0xF000) >> 12);    } // First nibble
+    uint8_t x()    const { return static_cast<uint8_t>((opcode & 0x0F00) >> 8);     } // Second nibble or lower 4 bit of 1st byte
+    uint8_t y()    const { return static_cast<uint8_t>((opcode & 0x00F0) >> 4);     } // Third nibble or upper 4 bit of 2nd byte
+    uint8_t n()    const { return static_cast<uint8_t>((opcode & 0x000F));          } // Fourth nibble
+    uint8_t kk()   const { return static_cast<uint8_t>((opcode & 0x00FF));          } // last byte of the instruction
+    uint16_t nnn() const { return static_cast<uint16_t>((opcode & 0x0FFF));         } // Last 12 bits
 };
 
 
@@ -72,5 +93,7 @@ struct Quirks {
     bool flagInstructionReset{true};    // true on original chip-8
     bool clipping{true};                // true on original chip-8
 };
+
+
 
 #endif //MY_CHIP8_INTERPRETER_CHIP8_H

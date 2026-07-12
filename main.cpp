@@ -13,6 +13,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    Chip8 chip8{initiateChip8(romPath)};
+    
 
     return 0;
 }
