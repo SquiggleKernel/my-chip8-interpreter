@@ -19,4 +19,6 @@ int sdlInit(SdlObjects& sdlObjects, uint displayScaling);
 void sdlCleanup(SdlObjects& sdlObjects);
 void sdlRender(SdlObjects& sdlObjects, Chip8& cpu ,uint displayScaling);
 
+int pollInput(SdlObjects& sdlObjects, Chip8& chip8);
+
 #endif //MY_CHIP8_INTERPRETER_WINDOW_H

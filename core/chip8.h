@@ -5,12 +5,14 @@
 #ifndef MY_CHIP8_INTERPRETER_CHIP8_H
 #define MY_CHIP8_INTERPRETER_CHIP8_H
 
+#include "../platform/window.h"
 #include <array>
 #include <iostream>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <cstring>
+
 
 struct Chip8 {
     // 4Kib of RAM, 16 8 bit registers and 16 bit Index register
@@ -83,8 +85,7 @@ struct Quirks {
 };
 
 void step(Chip8& cpu, Quirks quirks);
-int execute(Chip8& chip8, Quirks& quirks);
-
+int execute(Chip8& chip8,SdlObjects sdlObjects, Quirks& quirks, uint displayScaling);
 
 
 #endif //MY_CHIP8_INTERPRETER_CHIP8_H

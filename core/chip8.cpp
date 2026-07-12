@@ -2,7 +2,7 @@
 // Created by amrit on 12/07/26.
 //
 #include "chip8.h"
-#include "../platform/window.h"
+
 #include <chrono>
 
 void notImplementedYet(Instructions& instr) {
@@ -10,7 +10,7 @@ void notImplementedYet(Instructions& instr) {
 }
 
 
-int execute(Chip8& chip8, Quirks& quirks) {
+int execute(Chip8& chip8,SdlObjects sdlObjects, Quirks& quirks, uint displayScaling) {
     using clock = std::chrono::steady_clock ;
 
 
@@ -18,11 +18,14 @@ int execute(Chip8& chip8, Quirks& quirks) {
     auto lastInstructionTimePoint{clock::now()};
 
 
-    const auto timerInterval{std::chrono::duration<double>(1.0/60)};            // will run at 60Hz
+    const auto timerInterval{std::chrono::duration<double>(1.0/60)};            // timers will run at 60Hz
     const auto instructionInterval{std::chrono::duration<double>(1.0/700)};     // cpu will run at 700Hz
 
     while (true) {
-        // [implement event polling]
+        if (pollInput(sdlObjects, chip8)!=0) {
+            std::cerr << "Error occured while polling input\n";
+            return 2;
+        }
 
 
         auto now{clock::now()};
@@ -35,12 +38,12 @@ int execute(Chip8& chip8, Quirks& quirks) {
 
         while (now - lastTimerTick>= timerInterval) {
             if (chip8.delayTimer != 0) chip8.delayTimer--;
-            if (chip8.delayTimer != 0) chip8.delayTimer--;
-            lastInstructionTimePoint += std::chrono::duration_cast<clock::duration>( instructionInterval);
+            if (chip8.soundTimer != 0) chip8.soundTimer--;
+            lastInstructionTimePoint += std::chrono::duration_cast<clock::duration>( timerInterval);
         }
 
         if (chip8.dirtyDisplay) {
-
+            sdlRender(sdlObjects, chip8, displayScaling);
             chip8.dirtyDisplay = false;
         }
     }
@@ -58,6 +61,8 @@ void step(Chip8& cpu, Quirks quirks) {
     uint16_t temp{};
     uint8_t& vx = cpu.v_[instr.x()];
     uint8_t& vy = cpu.v_[instr.y()];
+
+    std::cout<<"This instruction: " << std::hex << (int)instr.opcode << " is running\n";
 
     // giant opcode switch statement
     switch ((instr.opcode & 0xF000) >> 12) {
@@ -138,23 +143,28 @@ void step(Chip8& cpu, Quirks quirks) {
             break;
 
         case 0xD:
+
+            // something major wrong
             cpu.v_[0xF] = 0;
-            for (int j=0 ; j<instr.n() ; j++) {
+            for (int j=0; j<instr.n() ; j++) {
                 for (int i=0 ; i<8 ; i++) {
-                    if (!quirks.clipping  || ((j+vy)< 64) & ((i+vx)<32)) {
 
-                        bool& pixel {cpu.display[(j+vy)&63][(i+vx)&31]};
-                        bool switchTo{static_cast<bool>(cpu.indexRegister + i + j)};
+                    if (!quirks.clipping || ((j+vy<32) & (i+vx<64))) {
+                        bool spritePixel {static_cast<bool>(((cpu.memory[static_cast<uint>(cpu.indexRegister+j)])>>(7-i))&1)};
+                        bool& displayPixel {cpu.display[(uint)(vy+j)%32][(uint)(vx+i)%64]};
 
-                        pixel ^= switchTo;
-                        cpu.v_[0xF] = (!pixel)&(switchTo);
+                        if (displayPixel & spritePixel) {
+                            cpu.v_[0xF] = 1;
+                        }
+
+                        displayPixel ^= spritePixel;
 
                     } else {
-                        // do nothing in case if clipping is enabled and writting outside screen
+                        // do nothing
                     }
                 }
             }
-            cpu. dirtyDisplay = true;
+            cpu.dirtyDisplay = true;
             break;
 
         case 0xE:

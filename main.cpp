@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     Quirks quirks{};
     Chip8 chip8{initiateChip8(romPath)};
 
-    uint displayScaling{10};
+    uint displayScaling{15};
     SdlObjects sdlObjects{};
 
     if (sdlInit(sdlObjects, displayScaling) != 0) {
@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    execute(chip8, quirks);
+    execute(chip8, sdlObjects, quirks, displayScaling);
 
     sdlCleanup(sdlObjects);
     return 0;

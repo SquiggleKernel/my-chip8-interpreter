@@ -12,7 +12,7 @@ int sdlInit(SdlObjects& sdlObjects, uint displayScaling) {
     }
 
 
-    sdlObjects.window = SDL_CreateWindow("Chip8 Interpreter", (int)(64*displayScaling), (int)(32*displayScaling), SDL_WINDOW_ALWAYS_ON_TOP);
+    sdlObjects.window = SDL_CreateWindow("Chip8 Interpreter", (int)(64*displayScaling), (int)(32*displayScaling), SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_RESIZABLE);
     sdlObjects.renderer = SDL_CreateRenderer(sdlObjects.window,NULL);
     if (!sdlObjects.renderer) {
         std::cerr << "[ERROR]: " << SDL_GetError() << '\n';
@@ -42,6 +42,7 @@ void sdlRender(SdlObjects& sdlObjects, Chip8& cpu ,uint displayScaling) {
             SDL_RenderFillRect(sdlObjects.renderer, &rect);
         }
     }
+    SDL_RenderPresent(sdlObjects.renderer);
 }
 
 void sdlCleanup(SdlObjects& sdlObjects) {
