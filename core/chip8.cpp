@@ -2,6 +2,7 @@
 // Created by amrit on 12/07/26.
 //
 #include "chip8.h"
+#include "../platform/window.h"
 #include <chrono>
 
 void notImplementedYet(Instructions& instr) {
@@ -39,7 +40,7 @@ int execute(Chip8& chip8, Quirks& quirks) {
         }
 
         if (chip8.dirtyDisplay) {
-            // [render new frame]
+
             chip8.dirtyDisplay = false;
         }
     }
@@ -67,6 +68,7 @@ void step(Chip8& cpu, Quirks quirks) {
                         cpu.display[i][j] = false;
                     }
                 }
+                cpu.dirtyDisplay = true;
             }
             else if (instr.opcode == 0x00EE) {
                 // implement it

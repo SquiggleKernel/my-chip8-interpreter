@@ -1,4 +1,5 @@
 #include "core/initializationHelper.h"
+#include "platform/window.h"
 
 int main(int argc, char* argv[]) {
 
@@ -15,8 +16,17 @@ int main(int argc, char* argv[]) {
     Quirks quirks{};
     Chip8 chip8{initiateChip8(romPath)};
 
+    uint displayScaling{10};
+    SdlObjects sdlObjects{};
+
+    if (sdlInit(sdlObjects, displayScaling) != 0) {
+        std::cerr << "Error in while initializing SDL components\n";
+        sdlCleanup(sdlObjects);
+        return -1;
+    }
+
     execute(chip8, quirks);
 
-
+    sdlCleanup(sdlObjects);
     return 0;
 }

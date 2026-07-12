@@ -33,6 +33,9 @@ struct Chip8 {
     std::array<std::array<bool, 64>, 32> display{};
     bool dirtyDisplay{true};
 
+    // keyboard
+    std::array<bool,16> keyboard{};
+
     // PRNG
     uint16_t prngState{};
 
