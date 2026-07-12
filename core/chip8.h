@@ -54,6 +54,8 @@ struct Chip8 {
         return static_cast<uint16_t>( memory[pc]<<8 | memory [pc+1]);
     }
 
+
+
 };
 
 struct Instructions {
@@ -68,23 +70,6 @@ struct Instructions {
 };
 
 
-struct RNG {
-    uint16_t state;
-
-    // Call this once when the emulator starts
-    void seed(uint16_t val) {
-        // State cannot be 0, or the math will always return 0
-        state = (val == 0) ? 0xACE1 : val;
-    }
-
-    // Generates the next number
-    uint8_t get_byte() {
-        state ^= state << 7;
-        state ^= state >> 9;
-        state ^= state << 8;
-        return static_cast<std::uint8_t>(state & 0xFF);
-    }
-};
 
 struct Quirks {
     bool shiftInstruction {true};       // true on original chip-8
@@ -93,6 +78,9 @@ struct Quirks {
     bool flagInstructionReset{true};    // true on original chip-8
     bool clipping{true};                // true on original chip-8
 };
+
+void step(Chip8& cpu, Quirks quirks);
+int execute(Chip8& chip8, Quirks& quirks);
 
 
 
