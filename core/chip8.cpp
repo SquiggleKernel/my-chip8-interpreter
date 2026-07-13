@@ -201,19 +201,21 @@ void step(Chip8& cpu, Quirks quirks) {
             vx = instr.kk() & cpu.getRandomByte();
             break;
 
-        case 0xD:
+        case 0xD: {
             if (quirks.displayWait && cpu.waitingForVblank) {
                 cpu.pc-=2;
                 break;
             }
             cpu.v_[0xF] = 0;
+            auto xStart{vx%64};
+            auto yStart{vy%32};
             for (int j=0; j<instr.n() ; j++) {
                 for (int i=0 ; i<8 ; i++) {
 
-                    if (!quirks.clipping || ((j+vy<32) && (i+vx<64))) {
+                    if (!quirks.clipping || ((j+yStart<32) && (i+xStart<64))) {
 
                         bool spritePixel {static_cast<bool>(((cpu.memory[static_cast<uint>(cpu.indexRegister+j)])>>(7-i))&1)};
-                        bool& displayPixel {cpu.display[(uint)(vy+j)%32][(uint)(vx+i)%64]};
+                        bool& displayPixel {cpu.display[(uint)(yStart+j)%32][(uint)(xStart+i)%64]};
 
                         if (displayPixel & spritePixel) {
                             cpu.v_[0xF] = 1;
@@ -231,7 +233,7 @@ void step(Chip8& cpu, Quirks quirks) {
                 cpu.waitingForVblank = true;
             }
             break;
-
+        }
         case 0xE:
             if ((instr.opcode & 0xFF) == 0x9E) {
                 if (cpu.keyboard[vx])   cpu.pc+=2;

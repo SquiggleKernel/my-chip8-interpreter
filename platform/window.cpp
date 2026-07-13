@@ -6,8 +6,8 @@
 
 int sdlInit(SdlObjects& sdlObjects, uint displayScaling) {
 
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
-        SDL_Log("[ERROR]: SDL Init Failed!");
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
+        SDL_Log("[ERROR]: SDL Init Failed, Error: %s", SDL_GetError());
         return 2;
     }
 
@@ -18,6 +18,19 @@ int sdlInit(SdlObjects& sdlObjects, uint displayScaling) {
         std::cerr << "[ERROR]: " << SDL_GetError() << '\n';
         return 2;
     }
+
+    // sdlObjects.spec.format = SDL_AUDIO_F32;
+    // sdlObjects.spec.channels = 1;
+    // sdlObjects.spec.freq = 44000;
+    //
+    // sdlObjects.stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &sdlObjects.spec, NULL, NULL);
+    //
+    // if (!sdlObjects.stream) {
+    //     SDL_Log("[ERROR]: Failed to open audio device, Error: %s", SDL_GetError());
+    //     return 2;
+    // }
+    //
+    // SDL_ResumeAudioStreamDevice(sdlObjects.stream);
     return 0;
 }
 

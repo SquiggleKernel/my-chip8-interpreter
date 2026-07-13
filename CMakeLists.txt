@@ -10,7 +10,8 @@ add_executable(my_chip8_interpreter main.cpp
         core/chip8.h
         platform/window.cpp
         platform/window.h
-        platform/polling.cpp)
+        platform/polling.cpp
+        platform/audio.cpp)
 
 target_compile_options(my_chip8_interpreter PRIVATE -Wall -Wextra -Wpedantic -Werror -Weffc++ -Wconversion -Wsign-conversion)
 
