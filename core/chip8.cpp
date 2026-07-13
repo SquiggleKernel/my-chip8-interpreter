@@ -2,7 +2,6 @@
 // Created by amrit on 12/07/26.
 //
 #include "chip8.h"
-
 #include <chrono>
 
 void notImplementedYet(Instructions& instr) {
@@ -18,8 +17,8 @@ int execute(Chip8& chip8,SdlObjects sdlObjects, Quirks& quirks, uint displayScal
     auto lastInstructionTimePoint{clock::now()};
 
 
-    const auto timerInterval{std::chrono::duration<double>(1.0/60)};            // timers will run at 60Hz
-    const auto instructionInterval{std::chrono::duration<double>(1.0/700)};     // cpu will run at 700Hz
+    const auto timerInterval{std::chrono::duration<double>(1'000'000'000/60)};            // timers will run at 60Hz
+    const auto instructionInterval{std::chrono::steady_clock::duration(1'000'000'000/700)};     // cpu will run at 700Hz
 
     while (true) {
         if (pollInput(sdlObjects, chip8)!=0) {
@@ -143,14 +142,12 @@ void step(Chip8& cpu, Quirks quirks) {
             break;
 
         case 0xD:
-
-            // something major wrong
             cpu.v_[0xF] = 0;
             for (int j=0; j<instr.n() ; j++) {
                 for (int i=0 ; i<8 ; i++) {
 
-                    if (!quirks.clipping || ((j+vy<32) & (i+vx<64))) {
-                        
+                    if (!quirks.clipping || ((j+vy<32) && (i+vx<64))) {
+
                         bool spritePixel {static_cast<bool>(((cpu.memory[static_cast<uint>(cpu.indexRegister+j)])>>(7-i))&1)};
                         bool& displayPixel {cpu.display[(uint)(vy+j)%32][(uint)(vx+i)%64]};
 

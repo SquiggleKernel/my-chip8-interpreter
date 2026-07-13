@@ -7,7 +7,7 @@
 int pollInput(SdlObjects& sdlObjects,Chip8& chip8) {
     while (SDL_PollEvent(&sdlObjects.event)) {
         if (sdlObjects.event.type == SDL_EVENT_QUIT) {
-            return -1;
+            return 1;
         }
 
         // Check for key presses or releases
@@ -36,7 +36,7 @@ int pollInput(SdlObjects& sdlObjects,Chip8& chip8) {
                 case SDL_SCANCODE_C: chip8.keyboard[0xB] = isPressed; break;
                 case SDL_SCANCODE_V: chip8.keyboard[0xF] = isPressed; break;
 
-                case SDL_SCANCODE_ESCAPE: return -1;
+                case SDL_SCANCODE_ESCAPE: return 1;
                 default: break;
             }
         }
