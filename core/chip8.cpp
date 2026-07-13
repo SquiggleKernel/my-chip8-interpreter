@@ -4,6 +4,8 @@
 #include "chip8.h"
 #include <chrono>
 
+
+// for debugging
 void notImplementedYet(Instructions& instr) {
     std::cerr << "This instruction: " << std::hex << instr.type() << instr.nnn() << "has not been implemented yet.\n";
 }
@@ -29,11 +31,15 @@ int execute(Chip8& chip8,SdlObjects sdlObjects, Quirks& quirks, uint displayScal
 
         auto now{clock::now()};
 
-
+        // for debugging
+        int noOfInstructions{};
+        std::cout <<std::dec << "Instrctions executed in " << std::chrono::duration_cast<std::chrono::milliseconds>(now-lastInstructionTimePoint) << " is : ";
         while (now - lastInstructionTimePoint >= instructionInterval) {
+            noOfInstructions++;
             step(chip8, quirks);
             lastInstructionTimePoint += std::chrono::duration_cast<clock::duration>( instructionInterval);
         }
+        std::cout << noOfInstructions << '\n';
 
         while (now - lastTimerTick>= timerInterval) {
             if (chip8.delayTimer != 0) chip8.delayTimer--;
@@ -75,8 +81,9 @@ void step(Chip8& cpu, Quirks quirks) {
                 cpu.dirtyDisplay = true;
             }
             else if (instr.opcode == 0x00EE) {
-                // implement it
-                notImplementedYet(instr);
+                cpu.sp--;
+                cpu.pc = cpu.stack[cpu.sp];
+                cpu.stack[cpu.sp] = 0;          // not necessary only for debugging
             }
             else {
                 // nop for 0nnn instr
@@ -88,23 +95,21 @@ void step(Chip8& cpu, Quirks quirks) {
             break;
 
         case 0x2:
-            // implement it
-            notImplementedYet(instr);
+            cpu.stack[cpu.sp] = cpu.pc;
+            cpu.sp++;
+            cpu.pc = instr.nnn();
             break;
 
         case 0x3:
-            // implement it
-            notImplementedYet(instr);
+            if (instr.kk() == vx) cpu.pc+=2;
             break;
 
         case 0x4:
-            // implement it
-            notImplementedYet(instr);
+            if (instr.kk() != vx) cpu.pc+=2;
             break;
 
         case 0x5:
-            // implement it
-            notImplementedYet(instr);
+            if (vy == vx) cpu.pc+=2;
             break;
 
         case 0x6:
@@ -113,18 +118,65 @@ void step(Chip8& cpu, Quirks quirks) {
 
         case 0x7:
             temp = vx + instr.kk();
-            if (temp > 255) cpu.v_[0xF] = 1;
             vx = static_cast<uint8_t>(temp);
             break;
 
+        // logical operations
         case 0x8:
-            // implement it
-            notImplementedYet(instr);
+            switch (instr.opcode & 0x000F) {
+            case 0x0:
+                    vx = vy;
+                    break;
+            case 0x1:
+                    vx |= vy;
+                    if (quirks.flagLogicalReset) cpu.v_[0xF] = 0;
+                    break;
+            case 0x2:
+                    vx &= vy;
+                    if (quirks.flagLogicalReset) cpu.v_[0xF] = 0;
+                    break;
+            case 0x3:
+                    vx ^= vy;
+                    if (quirks.flagLogicalReset) cpu.v_[0xF] = 0;
+                    break;
+            case 0x4:
+                    temp = vx + vy;
+                    vx = static_cast<uint8_t>(temp);
+                    cpu.v_[0xF]= (temp >> 8) & 0b1;
+                    break;
+            case 0x5:
+                    temp = vx;
+                    vx -= vy;
+                    cpu.v_[0xF]= (temp >= vy) ? 1 : 0 ;
+                    break;
+            case 0x6:
+                    if (!quirks.shiftInPlace) {
+                        vx = vy;
+                    }
+                    temp = vx;
+                    vx >>= 1;
+                    cpu.v_[0xF] = (temp & 0b1);
+                    break;
+            case 0x7:
+                    temp = vx;
+                    vx = vy-vx;
+                    cpu.v_[0xF]= (vy >= temp) ? 1 : 0 ;
+                    break;
+            case 0xE:
+                    if (!quirks.shiftInPlace) {
+                        vx = vy;
+                    }
+                    temp = vx;
+                    vx <<=1;
+                    cpu.v_[0xF] = ((temp>>7) & 0b1);
+                    break;
+            default:
+                    std::cerr << "This instruction \"" << std:: hex <<instr.opcode << "\" is not valid for 0x8 grp\n" << std::hex;
+            }
             break;
 
         case 0x9:
-            // implement it
-            notImplementedYet(instr);
+            if (vy != vx) cpu.pc+=2;
             break;
 
         case 0xA:
@@ -171,8 +223,59 @@ void step(Chip8& cpu, Quirks quirks) {
             break;
 
         case 0xF:
-            // implement it
-            notImplementedYet(instr);
+            switch (instr.opcode & 0x00FF) {
+            case 0x07:
+                    notImplementedYet(instr);
+                    break;
+            case 0x0A:
+                    notImplementedYet(instr);
+                    break;
+            case 0x15:
+                    notImplementedYet(instr);
+                    break;
+            case 0x18:
+                    notImplementedYet(instr);
+                    break;
+            case 0x1E:
+                    cpu.indexRegister += vx;
+                    break;
+            case 0x29:
+                    notImplementedYet(instr);
+                    break;
+            case 0x33:
+                    temp = vx;
+                    for (uint i{}; i<3 ; i++) {
+                        cpu.memory[cpu.indexRegister+2-i] = static_cast<uint8_t>(temp%10);
+                        temp/=10;
+                    }
+
+                    break;
+            case 0x55:
+                    temp = instr.x();
+                    for (uint i=0; i<= temp; i++ ) {
+                        cpu.memory[cpu.indexRegister+i] = cpu.v_[i];
+                    }
+                    if (quirks.registerIndexIncrement) {
+                        cpu.indexRegister += temp;
+                        cpu.indexRegister ++;
+                    }
+                    break;
+
+            case 0x65:
+                    temp = instr.x();
+                    for (uint i=0; i<= temp; i++ ) {
+                        cpu.v_[i] = cpu.memory[cpu.indexRegister+i];
+                    }
+                    if (quirks.registerIndexIncrement) {
+                        cpu.indexRegister += temp;
+                        cpu.indexRegister ++;
+                    }
+                    break;
+
+
+            default:
+                    std::cerr << "This instruction \"" << std:: hex <<instr.opcode << "\" is not valid for 0xF grp\n" << std::hex;
+            }
             break;
 
         default:

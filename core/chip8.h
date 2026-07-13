@@ -22,10 +22,10 @@ struct Chip8 {
 
     //program counter and stack pointer
     uint16_t pc{0x200};
-    uint8_t sp{};
+    uint8_t sp{0};
 
     // 16 level stack
-    std::array<uint16_t, 16 > stack{};
+    std::array<uint16_t, 16 > stack{0};
 
     // timers
     uint8_t delayTimer{0};
@@ -77,10 +77,10 @@ struct Instructions {
 
 
 struct Quirks {
-    bool shiftInstruction {true};       // true on original chip-8
+    bool shiftInPlace {false};          //  don't set vX to vY, so only shift vX, false on original chip-8
     bool registerIndexIncrement{true};  // true on original chip-8
     bool jumpWithOffset{true};          // tells what offset to use during jump instruction, V0 on original, Vx on new
-    bool flagInstructionReset{true};    // true on original chip-8
+    bool flagLogicalReset{true};        // COSMAC based variants will reset VFin logical ops, true on original chip-8
     bool clipping{true};                // true on original chip-8
 };
 
