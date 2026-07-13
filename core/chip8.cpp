@@ -13,7 +13,7 @@ void execute(Chip8& chip8,SdlObjects sdlObjects, Quirks& quirks, uint displaySca
     auto lastInstructionTimePoint{clock::now()};
 
 
-    const auto timerInterval{std::chrono::duration<double>(1'000'000'000/60)};            // timers will run at 60Hz
+    const auto timerInterval{std::chrono::steady_clock::duration(1'000'000'000/60)};            // timers will run at 60Hz
     const auto instructionInterval{std::chrono::steady_clock::duration(1'000'000'000/700)};     // cpu will run at 700Hz
 
     while (true) {
@@ -40,7 +40,8 @@ void execute(Chip8& chip8,SdlObjects sdlObjects, Quirks& quirks, uint displaySca
         while (now - lastTimerTick>= timerInterval) {
             if (chip8.delayTimer != 0) chip8.delayTimer--;
             if (chip8.soundTimer != 0) chip8.soundTimer--;
-            lastInstructionTimePoint += std::chrono::duration_cast<clock::duration>( timerInterval);
+            chip8.waitingForVblank = false;
+            lastTimerTick += std::chrono::duration_cast<clock::duration>( timerInterval);
         }
 
         if (chip8.dirtyDisplay) {
@@ -56,18 +57,21 @@ void step(Chip8& cpu, Quirks quirks) {
     // getting the instruction to execute and increasing the program counter by 2
     Instructions instr{};
     instr.opcode = cpu.getOpcode();
+
+    // // for debugging
+    // std::cout<<"This instruction: " << std::hex << (int)instr.opcode << " is running\n registers ";
+    // for (auto i: cpu.v_) {
+    //     std::cout << (int)i << "  ";
+    // }
+    // std::cout << "I "<< cpu.indexRegister <<"pc:sp"<<cpu.pc << ":"<< (int)cpu.sp << '\n';
+    // std::cout << "delayTime: " << (int)cpu.delayTimer << " : " << (int)cpu.soundTimer << '\n';
+
+
     cpu.pc+=2;
 
     uint16_t temp{};
     uint8_t& vx = cpu.v_[instr.x()];
     uint8_t& vy = cpu.v_[instr.y()];
-
-    // for debugging
-    std::cout<<"This instruction: " << std::hex << (int)instr.opcode << " is running\n registers ";
-    for (auto i: cpu.v_) {
-        std::cout << (int)i << "  ";
-    }
-    std::cout << cpu.indexRegister <<'\n';
 
 
     // giant opcode switch statement
@@ -198,6 +202,10 @@ void step(Chip8& cpu, Quirks quirks) {
             break;
 
         case 0xD:
+            if (quirks.displayWait && cpu.waitingForVblank) {
+                cpu.pc-=2;
+                break;
+            }
             cpu.v_[0xF] = 0;
             for (int j=0; j<instr.n() ; j++) {
                 for (int i=0 ; i<8 ; i++) {
@@ -219,6 +227,9 @@ void step(Chip8& cpu, Quirks quirks) {
                 }
             }
             cpu.dirtyDisplay = true;
+            if (quirks.displayWait) {
+                cpu.waitingForVblank = true;
+            }
             break;
 
         case 0xE:
@@ -242,6 +253,7 @@ void step(Chip8& cpu, Quirks quirks) {
                     }
                     else {
                         if (!cpu.gotKey) {
+                            cpu.gotKey = true;
                             break;
                         }
                     }

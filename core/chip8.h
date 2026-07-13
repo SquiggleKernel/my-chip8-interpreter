@@ -34,6 +34,7 @@ struct Chip8 {
     // display
     std::array<std::array<bool, 64>, 32> display{};
     bool dirtyDisplay{true};
+    bool waitingForVblank{false};
 
     // keyboard
     std::array<bool,16> keyboard{};
@@ -59,7 +60,7 @@ struct Chip8 {
     }
 
     uint16_t getOpcode() {
-        return static_cast<uint16_t>( memory[pc]<<8 | memory [pc+1]);
+        return static_cast<uint16_t>((static_cast<uint16_t>(memory[pc]) << 8) | static_cast<uint16_t>(memory[pc+1]));
     }
 
 
@@ -82,9 +83,10 @@ struct Instructions {
 struct Quirks {
     bool shiftInPlace {false};          //  don't set vX to vY, so only shift vX, false on original chip-8
     bool registerIndexIncrement{true};  // true on original chip-8
-    bool jumpOffsetWithVx{true};        // tells what offset to use during jump instruction, V0 on original, Vx on new
+    bool jumpOffsetWithVx{false};       // tells what offset to use during jump instruction, V0 on original, Vx on new
     bool flagLogicalReset{true};        // COSMAC based variants will reset VFin logical ops, true on original chip-8
-    bool clipping{true};                // true on original chip-8
+    bool clipping{false};               // true on original chip-8
+    bool displayWait{true};             // true on original chip-8
 };
 
 void step(Chip8& cpu, Quirks quirks);
