@@ -37,6 +37,9 @@ struct Chip8 {
 
     // keyboard
     std::array<bool,16> keyboard{};
+    bool isKeyPressed{false};
+    uint8_t lastPressedKey{0};
+    bool gotKey{true};   // for getting a input from keyboard
 
     // PRNG
     uint16_t prngState{};
@@ -48,7 +51,7 @@ struct Chip8 {
     }
 
     // Generates the next number
-    uint8_t get_byte() {
+    uint8_t getRandomByte() {
         prngState ^= prngState << 7;
         prngState ^= prngState >> 9;
         prngState ^= prngState << 8;
@@ -79,13 +82,13 @@ struct Instructions {
 struct Quirks {
     bool shiftInPlace {false};          //  don't set vX to vY, so only shift vX, false on original chip-8
     bool registerIndexIncrement{true};  // true on original chip-8
-    bool jumpWithOffset{true};          // tells what offset to use during jump instruction, V0 on original, Vx on new
+    bool jumpOffsetWithVx{true};        // tells what offset to use during jump instruction, V0 on original, Vx on new
     bool flagLogicalReset{true};        // COSMAC based variants will reset VFin logical ops, true on original chip-8
     bool clipping{true};                // true on original chip-8
 };
 
 void step(Chip8& cpu, Quirks quirks);
-int execute(Chip8& chip8,SdlObjects sdlObjects, Quirks& quirks, uint displayScaling);
+void execute(Chip8& chip8,SdlObjects sdlObjects, Quirks& quirks, uint displayScaling);
 
 
 #endif //MY_CHIP8_INTERPRETER_CHIP8_H

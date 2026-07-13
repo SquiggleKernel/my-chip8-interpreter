@@ -5,13 +5,7 @@
 #include <chrono>
 
 
-// for debugging
-void notImplementedYet(Instructions& instr) {
-    std::cerr << "This instruction: " << std::hex << instr.type() << instr.nnn() << "has not been implemented yet.\n";
-}
-
-
-int execute(Chip8& chip8,SdlObjects sdlObjects, Quirks& quirks, uint displayScaling) {
+void execute(Chip8& chip8,SdlObjects sdlObjects, Quirks& quirks, uint displayScaling) {
     using clock = std::chrono::steady_clock ;
 
 
@@ -23,23 +17,25 @@ int execute(Chip8& chip8,SdlObjects sdlObjects, Quirks& quirks, uint displayScal
     const auto instructionInterval{std::chrono::steady_clock::duration(1'000'000'000/700)};     // cpu will run at 700Hz
 
     while (true) {
-        if (pollInput(sdlObjects, chip8)!=0) {
-            std::cerr << "Error occured while polling input\n";
-            return 2;
+       switch (pollInput(sdlObjects, chip8)) {
+           case 1:
+                std::cerr << "Error occured while polling input\n";
+                return;
+           case 2:
+               std::cout << "Quitting\n";
+               return;
+           default:
+               break;
         }
-
 
         auto now{clock::now()};
 
-        // for debugging
-        int noOfInstructions{};
-        std::cout <<std::dec << "Instrctions executed in " << std::chrono::duration_cast<std::chrono::milliseconds>(now-lastInstructionTimePoint) << " is : ";
+
         while (now - lastInstructionTimePoint >= instructionInterval) {
-            noOfInstructions++;
             step(chip8, quirks);
             lastInstructionTimePoint += std::chrono::duration_cast<clock::duration>( instructionInterval);
         }
-        std::cout << noOfInstructions << '\n';
+
 
         while (now - lastTimerTick>= timerInterval) {
             if (chip8.delayTimer != 0) chip8.delayTimer--;
@@ -52,7 +48,6 @@ int execute(Chip8& chip8,SdlObjects sdlObjects, Quirks& quirks, uint displayScal
             chip8.dirtyDisplay = false;
         }
     }
-    return 0;
 }
 
 
@@ -67,7 +62,13 @@ void step(Chip8& cpu, Quirks quirks) {
     uint8_t& vx = cpu.v_[instr.x()];
     uint8_t& vy = cpu.v_[instr.y()];
 
-    std::cout<<"This instruction: " << std::hex << (int)instr.opcode << " is running\n";
+    // for debugging
+    std::cout<<"This instruction: " << std::hex << (int)instr.opcode << " is running\n registers ";
+    for (auto i: cpu.v_) {
+        std::cout << (int)i << "  ";
+    }
+    std::cout << cpu.indexRegister <<'\n';
+
 
     // giant opcode switch statement
     switch ((instr.opcode & 0xF000) >> 12) {
@@ -184,13 +185,16 @@ void step(Chip8& cpu, Quirks quirks) {
             break;
 
         case 0xB:
-            // implement it
-            notImplementedYet(instr);
+            cpu.pc = instr.nnn();
+            if (quirks.jumpOffsetWithVx) {
+                cpu.pc += vx;
+            } else {
+                cpu.pc += cpu.v_[0];
+            }
             break;
 
         case 0xC:
-            // implement it
-            notImplementedYet(instr);
+            vx = instr.kk() & cpu.getRandomByte();
             break;
 
         case 0xD:
@@ -218,29 +222,42 @@ void step(Chip8& cpu, Quirks quirks) {
             break;
 
         case 0xE:
-            // implement it
-            notImplementedYet(instr);
+            if ((instr.opcode & 0xFF) == 0x9E) {
+                if (cpu.keyboard[vx])   cpu.pc+=2;
+            }
+            else if ((instr.opcode & 0xFF) == 0xA1) {
+                if (!cpu.keyboard[vx])   cpu.pc+=2;
+            }
             break;
 
         case 0xF:
             switch (instr.opcode & 0x00FF) {
             case 0x07:
-                    notImplementedYet(instr);
+                    vx = cpu.delayTimer;
                     break;
             case 0x0A:
-                    notImplementedYet(instr);
+                    if (cpu.isKeyPressed) {
+                        vx = cpu.lastPressedKey;
+                        cpu.gotKey = false;
+                    }
+                    else {
+                        if (!cpu.gotKey) {
+                            break;
+                        }
+                    }
+                    cpu.pc-=2;
                     break;
             case 0x15:
-                    notImplementedYet(instr);
+                    cpu.delayTimer = vx;
                     break;
             case 0x18:
-                    notImplementedYet(instr);
+                    cpu.soundTimer = vx;
                     break;
             case 0x1E:
                     cpu.indexRegister += vx;
                     break;
             case 0x29:
-                    notImplementedYet(instr);
+                    cpu.indexRegister = vx*5;
                     break;
             case 0x33:
                     temp = vx;
