@@ -13,8 +13,8 @@ void execute(Chip8& chip8,SdlObjects sdlObjects, Quirks& quirks, uint displaySca
     auto lastInstructionTimePoint{clock::now()};
 
 
-    const auto timerInterval{std::chrono::steady_clock::duration(1'000'000'000/60)};            // timers will run at 60Hz
-    const auto instructionInterval{std::chrono::steady_clock::duration(1'000'000'000/700)};     // cpu will run at 700Hz
+    const auto timerInterval{std::chrono::nanoseconds(1'000'000'000/60)};            // timers will run at 60Hz
+    const auto instructionInterval{std::chrono::nanoseconds(1'000'000'000/chip8.cpuSpeedHz)};     // cpu will run at 700Hz
 
     while (true) {
        switch (pollInput(sdlObjects, chip8)) {
