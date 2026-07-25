@@ -44,6 +44,8 @@ void execute(Chip8& chip8,SdlObjects sdlObjects, Quirks& quirks, uint displaySca
             lastTimerTick += std::chrono::duration_cast<clock::duration>( timerInterval);
         }
 
+        sdlPlayBeep(sdlObjects, chip8.soundTimer > 0);
+
         if (chip8.dirtyDisplay) {
             sdlRender(sdlObjects, chip8, displayScaling);
             chip8.dirtyDisplay = false;

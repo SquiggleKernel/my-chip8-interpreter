@@ -19,18 +19,20 @@ int sdlInit(SdlObjects& sdlObjects, uint displayScaling) {
         return 2;
     }
 
-    // sdlObjects.spec.format = SDL_AUDIO_F32;
-    // sdlObjects.spec.channels = 1;
-    // sdlObjects.spec.freq = 44000;
-    //
-    // sdlObjects.stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &sdlObjects.spec, NULL, NULL);
-    //
-    // if (!sdlObjects.stream) {
-    //     SDL_Log("[ERROR]: Failed to open audio device, Error: %s", SDL_GetError());
-    //     return 2;
-    // }
-    //
-    // SDL_ResumeAudioStreamDevice(sdlObjects.stream);
+    sdlObjects.spec = {
+        .format = SDL_AUDIO_F32,
+        .channels = 1,
+        .freq = 44100,
+    };
+
+    sdlObjects.stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &sdlObjects.spec, NULL, NULL);
+
+    if (!sdlObjects.stream) {
+        SDL_Log("[ERROR]: Failed to open audio device, Error: %s", SDL_GetError());
+        return 2;
+    }
+
+    SDL_ResumeAudioStreamDevice(sdlObjects.stream);
     return 0;
 }
 
