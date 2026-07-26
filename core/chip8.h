@@ -86,7 +86,7 @@ struct Quirks {
     bool registerIndexIncrement{true};  // true on original chip-8
     bool jumpOffsetWithVx{false};       // tells what offset to use during jump instruction, V0 on original, Vx on new
     bool flagLogicalReset{true};        // COSMAC based variants will reset VFin logical ops, true on original chip-8
-    bool clipping{true};               // true on original chip-8
+    bool clipping{true};                // true on original chip-8
     bool displayWait{true};             // true on original chip-8
 };
 

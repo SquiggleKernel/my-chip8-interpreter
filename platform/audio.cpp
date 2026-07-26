@@ -13,15 +13,13 @@ void sdlPlayBeep(SdlObjects& sdlObjects, bool isBeeping) {
         const int targetBufferBytes = static_cast<int>((float)sdlObjects.spec.freq * sizeof(float) * 0.020f);
 
         float buffer[256];
-        const float frequency = 1000.0f; // CHIP-8 standard pitch (A4)
-        const float volume = 0.35f;      // 35% volume so it isn't deafening
+        const float frequency = 1000.0f;
+        const float volume = 0.35f;      // 35% volume
         const float phaseInc = (2.0f * static_cast<float>(M_PI) * frequency) / static_cast<float>(sdlObjects.spec.freq);
 
-        // Fetch initial queued bytes once
-        int currentQueued = SDL_GetAudioStreamQueued(sdlObjects.stream);
 
         // If enough data is already queued, this loop exits instantly without blocking.
-        while (currentQueued < targetBufferBytes) {
+        while (SDL_GetAudioStreamQueued(sdlObjects.stream) < targetBufferBytes) {
 
 
             for (int i = 0; i < 256; ++i) {
